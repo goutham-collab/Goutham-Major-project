@@ -1,4 +1,4 @@
-# eMobileShop
+# Online Mobile Shopping - eMobileShop
 
 Ecommerce mobile shop project on ASP.NET MVC Core 6.
 
