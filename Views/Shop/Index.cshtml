@@ -1,0 +1,337 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager;
+
+@{
+    ViewData["Title"] = "Shop";
+}
+<link href="~/assets/css/plugins/nouislider/nouislider.css" rel="stylesheet" />
+
+<main class="main">
+    <div class="page-header text-center" style="background-image: url('assets/images/page-header-bg.jpg')">
+        <div class="container">
+        	<h1 class="page-title">EMobile<span>Shop</span></h1>
+        </div><!-- End .container -->
+    </div><!-- End .page-header -->
+    <nav aria-label="breadcrumb" class="breadcrumb-nav mb-2">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
+                <li class="breadcrumb-item"><a asp-area="" asp-controller="Shop" asp-action="Index">Shop</a></li>
+                        
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="page-content">
+        <div class="container">
+            <div class="row">
+                <aside class="col-lg-3 order-lg-first">
+                	<div class="sidebar sidebar-shop">
+                		<div class="widget widget-clean">
+                			<label>Filters:</label>
+                					
+                		</div><!-- End .widget widget-clean -->                                                		
+        				<div class="widget widget-collapsible">
+    						<h3 class="widget-title">Category</h3><!-- End .widget-title -->
+
+							<div class="collapse show" id="widget-4">
+								<div class="widget-body">
+									<div class="filter-items filter-items-count" id="divListAllCategory">
+									</div><!-- End .filter-items -->
+								</div><!-- End .widget-body -->
+							</div><!-- End .collapse -->
+        				</div><!-- End .widget --> 
+                        
+                        <div class="widget widget-collapsible">
+                            <h3 class="widget-title">
+                                <a data-toggle="collapse" href="#widget-5" role="button" aria-expanded="true" aria-controls="widget-5">
+                                    Price
+                                </a>
+                            </h3><!-- End .widget-title -->
+
+                            <div class="collapse show" id="widget-5">
+                                <div class="widget-body">
+                                    <div class="filter-price">
+                                        <div class="filter-price-text">
+                                            Price Range:
+                                            <span id="filter-price-range"></span>
+                                        </div><!-- End .filter-price-text -->
+
+                                        <div id="product-slider"></div><!-- End #price-slider -->
+                                    </div><!-- End .filter-price -->
+                                </div><!-- End .widget-body -->
+                            </div><!-- End .collapse -->
+                        </div><!-- End .widget -->
+        				<!-- End .widget -->
+                	</div><!-- End .sidebar sidebar-shop -->
+                </aside>
+                <div class="col-lg-9">
+                	<div class="toolbox">
+                		<div class="toolbox-left">
+                			<div class="toolbox-info">                						
+                			</div><!-- End .toolbox-info -->
+                		</div><!-- End .toolbox-left -->
+
+                		<!-- End .toolbox-right -->
+                	</div><!-- End .toolbox -->
+
+                    <div class="products mb-3">
+                        <div class="row justify-content-center" id="th">
+                        </div><!-- End .row -->
+                    </div><!-- End .products -->
+                    <div class="row" id="tagload" style="justify-content:center">
+
+                    </div>
+                    <div id="button"></div>
+                	<nav aria-label="Page navigation">
+						<ul class="pagination justify-content-center">
+							<li class="page-item disabled"></li>
+						</ul>
+					</nav>
+                </div><!-- End .col-lg-9 -->
+                <!-- End .col-lg-3 -->
+            </div><!-- End .row -->
+
+        </div><!-- End .container -->
+    </div><!-- End .page-content -->
+</main><!-- End .main -->
+<script src="~/assets/css/plugins/nouislider/wnumb.js"></script>
+<script src="~/assets/css/plugins/nouislider/nouislider.min.js"></script>
+<script>
+
+    var customerID = 1;
+    var pageIndex = 1;
+    var ProductID = 0;
+    var CompanyID = 0;
+    var CategoryID = 0;
+    var pageIndex = 1;
+    var b = 0;
+    var pt = 0;
+    var pageIndex1 = 1;
+    var x = 0;
+    var page;
+    var selectedCompany = new Array();
+    var selectedCategory = new Array(); 
+    var items = [];
+    var slider;
+    $(function () {           
+        FillProduct(1,[]);
+        ListAllCategory();        
+        
+        var regularSlider = document.querySelector('#product-slider');        
+        var dollarPrefixFormat = wNumb({ prefix: '$', decimals: 0 });
+        let priceList = items.map(x => x.price);
+        var min = items.length > 0 ? Math.min(...priceList) : 0;
+        var max = items.length > 0 ? Math.max(...priceList) : 1000;
+        slider = noUiSlider.create(regularSlider, {
+            // two handles
+            start: [min, max],
+            // they are connected
+            connect: true,
+            // their minimal difference is 5 - this makes sense, because we want the user to always find items
+            margin: 5,
+            // tooltip for handle 1 and handle 2
+            tooltips: [dollarPrefixFormat, dollarPrefixFormat],            
+            // start and end point of the slider - we are going to calculate that later based on a set of items
+            range: { min: min, max: max }
+        });
+
+        slider.on('set', function (values) {            
+            let filteredItems = filterItems(items, values)
+            OnSuccess(filteredItems, false);            
+        });
+    });
+
+
+    function filterItems(items, price) {        
+        return items.filter(item => {
+            return item.price >= price[0] && item.price <= price[1]
+        })
+    }
+       
+    function Filters() {
+        selectedCategory = [];
+        pageIndex = 1;
+        document.querySelector("#th").innerHTML = "";
+        document.querySelector("#button").innerHTML = "";
+        document.querySelector("#tagload").innerHTML = "";
+        
+        $.each($("input[name='chknameCategory']:checked"), function () {
+            selectedCategory.push($(this).val());
+        });
+        
+        FillProduct(pageIndex, selectedCategory);
+    }
+        
+    function Reset() {
+
+        CategoryID = 0;
+        CompanyID = 0;
+        pageIndex = 1;
+        b = 0;
+        pt = 0;
+        pageIndex1 = 1;
+        x = 0;
+        $("#txtBranName").html("All");
+        $("#txtPartsType").html("All");
+
+        document.querySelector("#th").innerHTML = "";
+
+    }
+
+    function FillProduct(pageIndex, categoryList) {        
+        let payload = {};
+        payload.pageIndex = pageIndex;
+        payload.categoryList = categoryList.length > 0 ? categoryList.join(",") : null;
+
+        $.ajax({
+            type: "get",
+            url: "../Shop/ProductList",
+            data: payload,            
+            dataType: "json",
+            async: false,
+            success: function(response) {
+                OnSuccess(response, true);
+            },
+            error: function (err) {
+                alert(err.responseText);
+            }
+        });
+    }
+    function OnSuccess(response, apiCall) {        
+        var divTag = "";
+        var divTag1 = "";
+        items = apiCall ? response.length > 0 ? [...response] : [...items] : [...items];
+        if(!apiCall) $("#th").html("");
+        $("#button").html("");
+        if (response.length > 0) {
+
+            var btnTag = "";            
+            $.each(response, function(index, value) {                
+                divTag += "<div class=\"col-md-4 col-sm-9\">";
+                divTag += "                    <div class=\"product product-7 text-center \">";
+                divTag += "                        <figure class=\"product-media\">";                
+                divTag += "                            <a href=\"Product/" + value.id + "\">";
+                divTag += "                                <img src=\"" + value.image + "\" alt=\"product\"  class=\"product-image\">";
+                divTag += "                            </a>";
+                divTag += "";
+                divTag += "                            <div class=\"product-action-vertical\">";
+                divTag += "                            </div>";
+                
+                if (value.isAvailable === false) {
+                    divTag += "                            <div class=\"product-action\">";
+                    divTag += "                                <a href=\"javascript:void(0)\" class=\"btn-product btn-cart\"><span>Not Available</span></a>";
+                    divTag += "                            </div>";
+                }
+                else {
+                    divTag += "                            <div class=\"product-action\">";
+                    divTag += "                                <a href=\"javascript:void(0)\" class=\"btn-product btn-cart\" onclick=\"AddToCart(" + value.id + ");\"><span>add to cart</span></a>";
+                    divTag += "                            </div>";
+                }
+                   
+                divTag += "                        </figure>";
+                divTag += "                        <div class=\"product-body\">";
+                //divTag += "                            <div class=\"product-cat\">";
+                //divTag += "                                <a  href=\"Product/" + value.id + "\">" + $(this).find("CompanyName").text() + "</a>";
+                //divTag += "                            </div>";
+                divTag += "                            <div class=\"product-cat\">";
+                divTag += "                                <a  href=\"Product/" + value.id + "\">" + $(this).find("CategoryName").text() + "</a>";
+                divTag += "                            </div>";
+                divTag += "                            <h3 class=\"product-title\"><a  href=\"Product/" + value.id + "\">" + value.name + "</a></h3>";
+                divTag += "                            <div class=\"product-price\">$" + value.price;
+                divTag += "                            </div>";
+                divTag += "                        </div>";
+                divTag += "                    </div>";
+                divTag += "                </div>";
+            })
+            divTag1 += "<div class=\"row\" ><div class=\"col-md-12 text-center \">";
+            divTag1 += "<input type=\"buttton\" style='cursor:pointer;' class=\"btn btn-primary btn-round\" id=\"btnload\"  value=\"Load\" onclick=\"Load()\">";
+            divTag1 += "</div></div>";
+            //divTag += "<div class=\"row\"><div class=\"col-md-12 text-center\" > <input   class=\"shopbutton\" type=\"button\"  value=\"Load\" id=\"btnload\" onclick=\" Load();\"></div></div>";
+            apiCall ? $("#th").html(divTag) : $("#th").append(divTag);
+            $("#tagload").html(divTag1);
+        }
+        else {
+            divTag = "<div class=\"row \" ><span class=\"col-md-12 text-center\">No Record Found</span></div>";
+            $("#button").html(divTag);
+        }
+
+    }
+    function Load() {
+
+        $('#btnload').remove();
+        pageIndex = pageIndex + 1;        
+        $.each($("input[name='chknameCategory']:checked"), function () {
+            selectedCategory.push($(this).val());
+        });               
+        FillProduct(pageIndex, selectedCategory);
+        $('#btnload').add();
+
+
+    }
+    function AddToCart(ProductID) {
+        if (!@Json.Serialize(User.Identity.IsAuthenticated)) {
+
+            window.location.href = "Account/Login";
+        }
+        else {
+            var payload = {};
+            payload.productID = ProductID;
+            payload.Qty = 1;
+
+            $.ajax({
+                type: "post",
+                url: "../Cart/AddToCart",
+                data: payload,                
+                dataType: "json",
+                async: false,
+                success: OnSuccesscart,
+                error: function (err) {
+                    console.log(err);                    
+                }
+            });
+        }
+
+    }
+    function OnSuccesscart(response) {
+        swal("Sucessfully added to Cart ", "", "success");        
+    }
+    
+    function ListAllCategory() {
+        $.ajax({
+            type: "post",
+            url: "../shop/ListAllCategory",
+            data: '',
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            async: false,
+            success: OnSuccessCategory,
+            error: function (err) {
+                alert(err.responseText);
+            }
+        });
+    }
+    function OnSuccessCategory(response) {
+
+        var categoryID = getUrlVars()["Category"];
+
+        if (response.length > 0) {
+            var ulTag = "";
+
+            $.each(response, function (index, value) {                
+                ulTag += "<div class=\"form-check\">";
+                if (categoryID !== undefined && categoryID == value.Id)
+                    ulTag += "         <label class=\"form-check-label\" for=\"chk" + value.id + "\"><input type=\"checkbox\" checked name=\"chknameCategory\" value='" + value.id + "'  class=\"form-check-input\" id=\"chk" + value.id + "\" onchange='Filters();' />&nbsp" + value.name + "</label>";
+                else
+                    ulTag += "         <label class=\"form-check-label\" for=\"chk" + value.id + "\"><input type=\"checkbox\" name=\"chknameCategory\" value='" + value.id + "'  class=\"form-check-input\" id=\"chk" + value.id + "\" onchange='Filters();' />&nbsp" + value.name + "</label>";
+                ulTag += "       </div>";
+                    
+                   
+            })
+
+            $("#divListAllCategory").append(ulTag);
+        }
+
+
+    }
+</script>

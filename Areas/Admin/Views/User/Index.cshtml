@@ -1,0 +1,57 @@
+﻿@model IEnumerable<ApplicationUser>
+
+@{
+    ViewData["Title"] = "List of all users";
+}
+
+
+<p>
+    <h4>Users</h4>
+</p>
+
+<table id="table" class="table">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.FullName)</th>
+            <th>@Html.DisplayNameFor(model => model.UserName)</th>
+            <th>@Html.DisplayNameFor(model => model.Email)</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.FullName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.UserName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Email)
+                </td>
+            </tr>
+        }
+    </tbody>
+
+</table>
+<div class="row">
+    <div class="col-md-12">
+        <div class="btn btn-group-sm">
+            <a id="json" class="btn btn-success">JSON</a>
+            <a id="csv" class="btn btn-info">CSV</a>
+            <a id="pdf" class="btn btn-danger">PDF</a>
+        </div>
+    </div>
+</div>
+<script>
+    $('#json').on('click', function () {
+        $("#table").tableHTMLExport({ type: 'json', filename: 'data.json', ignoreColumns: '.ignore' });
+    })
+    $('#csv').on('click', function () {
+        $("#table").tableHTMLExport({ type: 'csv', filename: 'data.csv', ignoreColumns: '.ignore' });
+    })
+    $('#pdf').on('click', function () {
+        $("#table").tableHTMLExport({ type: 'pdf', filename: 'data.pdf', ignoreColumns: '.ignore' });
+    })
+</script>

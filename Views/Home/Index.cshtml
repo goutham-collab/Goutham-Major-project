@@ -1,0 +1,191 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager;
+
+@{
+    ViewData["Title"] = "Home";
+}
+
+<main class="main">         
+        <div class="page-header text-center col-md-12" style="background-image: url('Admin/dist/img/Banner/slider1.jpg')">
+        		<div class="container" style="height:50vh">
+                            			
+        		</div><!-- End .container -->
+        	</div><!-- End .page-header -->
+                <div class="container">
+                                        
+                    <div class="cat-section mt-4 mb-3">
+                        <div class="row" id="productTypeListJ">
+                        </div>
+                    </div>
+                </div>
+            <div class="container">
+            </div><!-- End .container -->
+
+    		<!-- End .container -->
+
+            <div class="mb-5"></div><!-- End .mb-6 -->
+
+            
+            <div class="container">
+                <div class="heading heading-center mb-6">
+                    <h2 class="title">Recent Arrivals</h2><!-- End .title -->                   
+                </div><!-- End .heading -->
+
+                
+                        <div class="products">
+                            <div class="row justify-content-center" id="RecentProductJ">                           
+                            </div><!-- End .row -->
+                        </div><!-- End .products -->
+                
+                <!-- End .tab-content -->
+                <div class="more-container text-center">
+                    <a asp-area="" asp-controller="Shop" asp-action="Index" class="btn btn-outline-darker btn-more"><span>Load more products</span></a>
+                </div><!-- <i class="icon-long-arrow-down"></i> End .more-container -->
+            </div><!-- End .container -->
+
+            <div class="container">
+                <hr>
+            	<div class="row justify-content-center">
+                    <div class="col-lg-4 col-sm-6">
+                        <div class="icon-box icon-box-card text-center">
+                            <span class="icon-box-icon">
+                                <i class="icon-rocket"></i>
+                            </span>
+                            <div class="icon-box-content">
+                                <h3 class="icon-box-title">Payment & Delivery</h3><!-- End .icon-box-title -->
+                                <p>Free shipping for orders over $50</p>
+                            </div><!-- End .icon-box-content -->
+                        </div><!-- End .icon-box -->
+                    </div><!-- End .col-lg-4 col-sm-6 -->
+
+                    <div class="col-lg-4 col-sm-6">
+                        <div class="icon-box icon-box-card text-center">
+                            <span class="icon-box-icon">
+                                <i class="icon-rotate-left"></i>
+                            </span>
+                            <div class="icon-box-content">
+                                <h3 class="icon-box-title">Return & Refund</h3><!-- End .icon-box-title -->
+                                <p>Free 100% money back guarantee</p>
+                            </div><!-- End .icon-box-content -->
+                        </div><!-- End .icon-box -->
+                    </div><!-- End .col-lg-4 col-sm-6 -->
+
+                    <div class="col-lg-4 col-sm-6">
+                        <div class="icon-box icon-box-card text-center">
+                            <span class="icon-box-icon">
+                                <i class="icon-life-ring"></i>
+                            </span>
+                            <div class="icon-box-content">
+                                <h3 class="icon-box-title">Quality Support</h3><!-- End .icon-box-title -->
+                                <p>Alway online feedback 24/7</p>
+                            </div><!-- End .icon-box-content -->
+                        </div><!-- End .icon-box -->
+                    </div><!-- End .col-lg-4 col-sm-6 -->
+                </div><!-- End .row -->
+
+                <div class="mb-2"></div><!-- End .mb-2 -->
+            </div><!-- End .container -->
+            
+            <!-- End .cta -->
+        </main>
+    <!-- End .main -->
+    <script>
+        var pageIndex1 = 1;
+        function Reset() {
+            pageIndex1 = 1;
+            var owlSettings = {
+                items: 1,
+                loop: true,
+                margin: 0,
+                responsiveClass: true,
+                nav: true,
+                navText: ['<i class="icon-angle-left">', '<i class="icon-angle-right">'],
+                dots: true,
+                smartSpeed: 400,
+                autoplay: false,
+                autoplayTimeout: 15000
+            };
+            $("#mySlider").owlCarousel(owlSettings);
+            FillPartsList(1, 0, 0);
+        }
+        $(function () {
+            RecentProductList();            
+        });
+
+        function RecentProductList() {
+            $.ajax({
+                type: "get",
+                url: "../Home/RecentProductList",
+                data: '{}',
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                async: false,
+                success: OnSuccessRecentProductList,
+                error: function (err) {
+                    alert(err.responseText);
+                }
+            });
+        }
+        function OnSuccessRecentProductList(response) {            
+            if (response.length > 0) {                
+                var divtaglist = "";
+
+                $.each(response, function (index, value) {                    
+                    if (value.isAvailable === true) {
+                        divtaglist += " <div class=\"col-6 col-md-4 col-lg-3\">";
+                        divtaglist += "               <div class=\"product product-11 mt-v3 text-center\">";
+                        divtaglist += "                   <figure class=\"product-media\">";
+                        divtaglist += "                            <a  href=\"Product/" + value.id + "\">";
+                        divtaglist += "                                <img src=\"" + value.image + "\" alt=\"product\"  class=\"product-image\">";
+                        divtaglist += "                       </a>";
+
+                        divtaglist += "                   </figure><!-- End .product-media -->";
+                        divtaglist += "";
+                        divtaglist += "                   <div class=\"product-body\">";
+                        divtaglist += "                       <h3 class=\"product-title\"><a  href=\"Product/" + value.id + "\">" + value.name + "</a></h3><!-- End .product-title -->";
+                        divtaglist += "                       <div class=\"product-price\">$" + value.price + "</div><!-- End .product-price -->";
+                        divtaglist += "                   </div><!-- End .product-body -->";
+                        divtaglist += "                   <div class=\"product-action\">";
+
+                    divtaglist += "    <a href=\"javascript:void(0)\" class=\"btn-product btn-cart\" onclick=\"AddToCart(" + value.id + ");\"><span>add to cart</span></a>";
+
+
+
+                        divtaglist += "                   </div><!-- End .product-action -->";
+                        divtaglist += "               </div><!-- End .product -->";
+                        divtaglist += "           </div>";
+                    }
+
+                })
+                $("#RecentProductJ").html(divtaglist);                
+            }
+        }
+
+    function AddToCart(ProductID) {
+        if (!@Json.Serialize(User.Identity.IsAuthenticated)) {
+
+            window.location.href = "Account/Login";
+        }
+        else {
+            var payload = {};
+            payload.productID = ProductID;
+            payload.Qty = 1;
+
+            $.ajax({
+                type: "post",
+                url: "../Cart/AddToCart",
+                data: payload,
+                dataType: "json",
+                async: false,
+                success: OnSuccesscart,
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+        }
+
+    }
+    function OnSuccesscart(response) {
+        swal("Sucessfully added to Cart ", "", "success");        
+    }
+</script>

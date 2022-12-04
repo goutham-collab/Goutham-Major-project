@@ -1,0 +1,67 @@
+﻿@model IEnumerable<eMobileShop.Models.Category>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
+</p>
+<table id="table" class="table">
+    <thead>
+        <tr>
+            <th class="ignore">
+                @Html.DisplayNameFor(model => model.Logo)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Description)
+            </th>
+            <th class="ignore"></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td class="ignore">
+                <img src="@Html.DisplayFor(modelItem => item.Logo)" alt="@Html.DisplayFor(modelItem => item.Name)" height="100" width="100"/>
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Description)
+            </td>
+            <td class="ignore">
+                <div class="btn btn-group-sm">
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-success">Edit</a> 
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info">Details</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger">Delete</a>
+                </div>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+<div class="row">
+    <div class="col-md-12">
+        <div class="btn btn-group-sm">
+            <a id="json" class="btn btn-success">JSON</a>
+            <a id="csv" class="btn btn-info">CSV</a>
+            <a id="pdf" class="btn btn-danger">PDF</a>
+        </div>
+    </div>
+</div>
+<script>
+    $('#json').on('click', function () {        
+        $("#table").tableHTMLExport({ type: 'json', filename: 'data.json', ignoreColumns: '.ignore' });
+    })
+    $('#csv').on('click', function () {
+        $("#table").tableHTMLExport({ type: 'csv', filename: 'data.csv', ignoreColumns: '.ignore' });
+    })
+    $('#pdf').on('click', function () {
+        $("#table").tableHTMLExport({ type: 'pdf', filename: 'data.pdf', ignoreColumns: '.ignore' });        
+    })
+</script>

@@ -1,0 +1,208 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager;
+
+@{
+    ViewData["Title"] = "Cart";
+}
+<main class="main">
+    <div class="page-header text-center" style="background-image: url('assets/images/page-header-bg.jpg')">
+        <div class="container">
+            <h1 class="page-title">Shopping Cart<span>Cart</span></h1>
+        </div><!-- End .container -->
+    </div><!-- End .page-header -->
+    <nav aria-label="breadcrumb" class="breadcrumb-nav">
+        <div class="container">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index" asp-area="">Home</a></li>
+                <li class="breadcrumb-item"><a asp-controller="Shop" asp-action="Index" asp-area="">Shop</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Shopping Cart</li>
+            </ol>
+        </div><!-- End .container -->
+    </nav><!-- End .breadcrumb-nav -->
+
+    <div class="page-content">
+        <div class="cart">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-9">
+                        <table class="table table-cart table-mobile">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tblbdy">
+                            </tbody>
+                        </table><!-- End .table table-wishlist -->
+
+                        <div class="cart-bottom">
+                            <div class="cart-discount">
+                            </div><!-- End .cart-discount -->                            
+                        </div><!-- End .cart-bottom -->
+                    </div><!-- End .col-lg-9 -->
+                    <aside class="col-lg-3">
+                        <div class="summary summary-cart">
+                            <h3 class="summary-title">Cart Total</h3><!-- End .summary-title -->
+
+                            <table class="table table-summary">
+                                <tbody id="FinalAmount">
+                                </tbody>
+                            </table><!-- End .table table-summary -->
+
+                            <a id="aCheckout" asp-area="" asp-controller="Checkout" asp-action="Index" class="btn btn-outline-primary-2 btn-order btn-block">PROCEED TO CHECKOUT</a>
+                        </div><!-- End .summary -->
+
+                        <a asp-area="" asp-controller="Shop" asp-action="Index" class="btn btn-outline-dark-2 btn-block mb-3"><span>CONTINUE SHOPPING</span><i class="icon-refresh"></i></a>
+                    </aside><!-- End .col-lg-3 -->
+                </div><!-- End .row -->
+            </div><!-- End .container -->
+        </div><!-- End .cart -->
+    </div><!-- End .page-content -->
+</main>
+<!-- End .main -->
+<script>
+    var customerID = 0;
+
+    $(function () {      
+        CartMaster();
+    });
+
+
+    function CartMaster() {        
+        if (!@Json.Serialize(User.Identity.IsAuthenticated)) {
+            window.location.href = "Account/Login";        
+        }
+        else {
+
+            $.ajax({
+                type: "get",
+                url: "../Cart/CartMasterDisplay",                
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                async: false,
+                success: OnCartSuccess,
+                error: function (err) {
+                    alert(err.responseText);
+                }
+            });
+        }
+    }
+
+    function OnCartSuccess(response) {        
+        var tblTag = "";
+
+        var x = 0, GrossTotal = 0;        
+        var tblTag = "";
+        var price = 0;
+        var span = "";
+        $("#tblbdy").empty();            
+        let NetAmount = 0;            
+        if (response.length > 0) {
+            $.each(response, function (index, value) {
+                NetAmount += (value.product.price * value.qty);
+
+                tblTag += "<tr>";
+                tblTag += "    <td class=\"product-col\">";
+                tblTag += "        <div class=\"product\">";
+                tblTag += "            <figure class=\"product-media\">";
+                tblTag += "                <a href=\"Product/" + value.product.id + "\">";
+                tblTag += "                    <img src=\"" + value.product.image + "\" alt=\"Product image\">";
+                tblTag += "                </a>";
+                tblTag += "            </figure>";
+                tblTag += "            <h3 class=\"product-title\">";
+                tblTag += "                <a href=\"Product/" + value.product.id + "\">" + value.product.name + "</a>";
+                tblTag += "            </h3>";
+                tblTag += "        </div>";
+                tblTag += "    </td>";
+                tblTag += "    <td class=\"price-col\">$" + value.product.price + "</td>";
+                tblTag += "    <td class=\"quantity-col\">";
+                tblTag += "        <div class=\"cart-product-quantity\">";
+                tblTag += "            <input type=\"number\" class=\"form-control\" min=\"1\"  id=\"qtyproduct\" onchange='updateCart(" + value.id + ",this.value);' value=" + value.qty + ">";
+                tblTag += "        </div>";
+                tblTag += "    </td>";
+                tblTag += "    <td class=\"total-col\"  id=\"totalamt\" value=\"price\">$" + value.product.price + "</td>";
+                tblTag += "    <td class=\"remove-col\"><a class=\"btn-remove\" href=\"javascript:void(0)\"onclick=\"cartDelete(" + value.id + ");\"><i class=\"icon-close\"></i></a></td>";
+                tblTag += "</tr>";
+                tblTag += "<tr>";                
+            })
+        } else {
+            tblTag += "<tr><td style='text-align:center' colspan='5'>Cart is empty :(</td></tr>";
+            $("#aCheckout").hide();
+        }
+        span += "<tr class=\"summary-total\">";
+        span += "    <td>Total:</td>";
+        span += "    <td>$" + NetAmount + "</td>";
+        span += "</tr>";            
+        
+        $("#tblbdy").html(tblTag);
+        $("#FinalAmount").html(span);
+
+    }
+
+    function cartDelete(CartID) {
+        swal({
+            title: "Are you sure?",
+            text: "You will not be able to recover this Record!",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonClass: "btn-danger",
+            confirmButtonText: "Yes",
+            cancelButtonText: "No",
+            closeOnConfirm: false,
+            closeOnCancel: false
+        },
+            function (isConfirm) {
+                if (isConfirm) {
+                    var payload = {};
+                    payload.cartId = CartID;
+                    $.ajax({
+                        type: "delete",
+                        url: "../Cart/DeleteCart",
+                        data: payload,                        
+                        dataType: "json",
+                        async: false,
+                        success: function (response) {
+                            console.log(response);
+                            CartMaster();
+                            swal("Deleted!", "Your Record has been deleted :(", "success");
+                            showminicart();
+                        },
+                        error: function (err) {
+                            alert(err.responseText);
+                        }
+                    });
+
+                } else {
+                    swal("Cancelled", "Your Record is safe :)", "error");
+                }
+            });
+
+    }
+    function updateCart(cartId, qty) {
+        var payload = { };
+        payload.cartId = cartId;
+        payload.Qty = qty;
+            
+        $.ajax({
+            type: "put",
+            url: "../Cart/UpdateToCart",
+            data: payload,            
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+                swal("Record Updated", "", "success");
+                CartMaster();
+                showminicart();                
+            },
+            error: function (err) {
+                alert(err.d);
+            }
+        });
+
+    };
+</script>

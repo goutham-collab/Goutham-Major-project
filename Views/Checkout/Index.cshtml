@@ -1,0 +1,245 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager;
+
+@{
+    ViewData["Title"] = "Checkout";
+}
+<main class="main">
+        <div class="page-header text-center" style="background-image: url('assets/images/page-header-bg.jpg')">
+        	<div class="container">
+        		<h1 class="page-title">Checkout<span>Shop</span></h1>
+        	</div><!-- End .container -->
+        </div><!-- End .page-header -->
+        <nav aria-label="breadcrumb" class="breadcrumb-nav">
+            <div class="container">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+                    <li class="breadcrumb-item"><a href="#">Shop</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+                </ol>
+            </div><!-- End .container -->
+        </nav><!-- End .breadcrumb-nav -->
+
+        <div class="page-content">
+            <div class="checkout">
+	            <div class="container">
+            	
+		                <div class="row">
+		                	<div class="col-lg-9">
+		                		<h2 class="checkout-title">Billing Details</h2><!-- End .checkout-title -->
+		                			<div class="row">
+		                				<div class="col-sm-12">
+		                					<label> Name *</label>
+		                					<input type="text" id="txtName" class="form-control" required>
+		                				</div><!-- End .col-sm-6 -->
+
+		                				
+		                			</div><!-- End .row -->
+                                <label>Email address *</label>
+	        						<input type="email" id="txtEmail" class="form-control" required>
+	            						            
+                                <label>Address *</label>
+	        						<textarea type="text"id="txtAddress"  class="form-control" required></textarea>
+		                			<div class="row">
+		                				<div class="col-sm-6">
+		                					<label>Postcode / ZIP *</label>
+		                					<input type="text" id="txtZip"  class="form-control" required />
+		                				</div><!-- End .col-sm-6 -->
+
+		                				<div class="col-sm-6">
+		                					<label>Phone *</label>
+		                					<input type="text" class="form-control"  id="txtPhoneNo" required />
+		                				</div><!-- End .col-sm-6 -->
+		                			</div><!-- End .row -->	                				
+		                	</div><!-- End .col-lg-9 -->
+		                	<aside class="col-lg-3">
+		                		<div class="summary">
+		                			<h3 class="summary-title">Your Order</h3><!-- End .summary-title -->
+
+		                			<table class="table table-summary" >
+		                				<thead>
+		                					<tr>
+		                						<th>Product</th>
+		                						<th>Total</th>
+		                					</tr>
+		                				</thead>
+
+		                				<tbody id="cartitem">
+		                					
+		                				</tbody>
+		                			</table><!-- End .table table-summary -->
+
+		                			<div class="accordion-summary" id="accordion-payment">										
+									</div><!-- End .accordion -->
+
+		                			<button type="button" class="btn btn-outline-primary-2 btn-order btn-block" id="btnSubmit">
+		                				<span class="btn-text">Place Order</span>
+		                				<span class="btn-hover-text">Proceed to Checkout</span>
+		                			</button>
+		                		</div><!-- End .summary -->
+		                	</aside><!-- End .col-lg-3 -->
+		                </div><!-- End .row -->
+            			
+	            </div><!-- End .container -->
+            </div><!-- End .checkout -->
+        </div><!-- End .page-content -->
+    </main><!-- End .main -->
+<script>   
+    $(function () {        
+        FillDetail();
+        CheckOut();
+    });
+    
+    function CheckOut() {
+        if (!@Json.Serialize(User.Identity.IsAuthenticated)) {
+            window.location.href = "Account/Login";
+        }
+        else {
+            $.ajax({
+                type: "get",
+                url: "../Cart/CartMasterDisplay",
+                data: '',                
+                dataType: "json",
+                async: false,
+                success: OnCartSuccess,
+                error: function (err) {
+                    alert(err.responseText);
+                }
+            });
+        }
+    }
+
+    function OnCartSuccess(response) {                
+        var cartlist = "";
+        let NetAmount = 0;
+        if (response.length > 0) {
+            $.each(response, function (index, value) {
+                NetAmount += (value.product.price * value.qty);
+                cartlist += " <tr>";
+                cartlist += " <td><a href=\"Product/" + value.product.id + "\">" + value.product.name + "  x  " + value.qty + "</a></td>";
+                cartlist += "     <td>$" + (value.product.price * value.qty) + "</td>";
+                cartlist += "</tr>";                
+            })
+
+            cartlist += "<tr>";
+            cartlist += "    <td>Shipping:</td>";
+            cartlist += "    <td>Free shipping</td>";
+            cartlist += "</tr>";
+            cartlist += "<tr class=\"summary-total\">";
+            cartlist += "    <td>Total:</td>";
+            cartlist += "    <td  id='amt'>$" + NetAmount + "</td>";
+            cartlist += "</tr>";
+            $("#cartitem").html(cartlist);            
+        }
+        else {
+            cartlist += "  <th>No Product Found :(</th>";
+            $("#cartitem").html(cartlist);
+        }
+
+    }
+    
+    $("#btnSubmit").on("click", function () {        
+        var Name = document.getElementById("txtName");
+        var Email = document.getElementById("txtEmail");
+        var PhoneNo = document.getElementById("txtPhoneNo");
+        var Address = document.getElementById("txtAddress");        
+        var Zip = document.getElementById("txtZip");
+        var amount = document.getElementById("amt");
+        if (Name.value == "") {
+            swal("Enter Name", "", "error");
+            $("#txtName").focus();
+        }
+        else if (Address.value == "") {
+            swal("Enter Address", "", "error");
+            $("#txtAddress").focus();            
+        }
+        else if (Zip.value == "") {
+            swal("Enter Zip/PostCode", "", "error");
+            $("#txtZip").focus();
+        }
+        else if (Email.value == "") {
+            swal("Enter Email", "", "error");
+            $("#txtEmail").focus();
+        }        
+        else if (PhoneNo.value == "" || isNaN(PhoneNo.value)) {
+            swal("Enter Phone No", "", "error");
+            $("#txtPhoneNo").focus();
+        }        
+        else if (amount == null) {
+            window.location.href = "/Checkout";
+        }
+        else {
+
+            var rm = {};            
+            rm.Name = $("#txtName").val();
+            rm.Email = $("#txtEmail").val();            
+            rm.PhoneNo = $("#txtPhoneNo").val();
+            rm.Address = $("#txtAddress").val();            
+            rm.Zip = $("#txtZip").val();
+            
+            $.ajax({
+                type: "post",
+                url: "../Checkout/AddOrder",
+                data: rm,                
+                dataType: "json",
+                success: function (response) {
+
+                    var result = response.success;
+                    if (!result)
+                        swal(response.message, "", "error");
+                    else {                        
+                        swal({
+                                title: "",
+                                text: "Your order has been placed",
+                                type: "success"
+                            },
+                            function () {
+                                window.location.href = "/";
+                            }
+                        );
+                            
+                    }
+                },
+                error: function (err) {
+                    alert(err.d);
+                }
+            });
+        }
+    });
+    
+    function FillDetail(customerID) {
+        if (!@Json.Serialize(User.Identity.IsAuthenticated)) {
+            window.location.href = "Account/Login";
+        }        
+        else {
+            $.ajax({
+                type: "get",
+                url: "../Checkout/GetCustomerShippingDetail",
+                data: '',                
+                dataType: "json",
+                async: false,
+                success: OnFillSuccess,
+                error: function (err) {
+                    alert(err.responseText);
+                }
+            });
+        }
+    }
+    function OnFillSuccess(response) {                        
+        console.log(response);
+        $("#txtName").val(response.name);
+        $("#txtEmail").val(response.email);
+        $("#txtPhoneNo").val(response.phoneNo);
+        $("#txtAddress").val(response.address);
+        $("#txtZip").val(response.zip);
+    }
+    function ClearData()
+    {
+        $("#txtName").val('');
+        $("#txtEmail").val('');
+        $("#txtPhoneNo").val('');
+        $("#txtAddress").val('');
+        $("#txtZip").val('');
+        CheckOut();
+    }
+</script>

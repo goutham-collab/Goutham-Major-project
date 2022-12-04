@@ -1,0 +1,218 @@
+﻿@model IEnumerable<eMobileShop.Models.Order>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="container">
+<div class="row">
+    <div class="col-md-12">        
+        <table class="table" width="100%">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.OrderNo)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.OrderDate)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Name)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PhoneNo)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Email)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Address)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.ZipCode)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.NetAmount)
+                </th>
+                <th width="10%"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.OrderNo)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.OrderDate)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.PhoneNo)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Email)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Address)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.ZipCode)
+                    </td>
+                    <td>
+                        $@Html.DisplayFor(modelItem => item.NetAmount)
+                    </td>
+                    <td>
+                        <div class="btn-order" style="min-width:0px">
+                                <a onclick="ViewOrderDetail(@Json.Serialize(item).ToString())" class="btn-order btn-info"><i class="icon-eye"></i></a>
+                            @if (!item.IsCancelled && !item.IsCompleted)
+                            {
+                                <a onclick="ChangeOrder(2,@item.Id)" class="btn-order btn-danger"><i class="icon-close"></i></a>
+                            } 
+                            else
+                            {
+                                @if (item.IsCompleted)
+                                {
+                                    <span class="ml-1 badge badge-primary">completed</span>
+                                }
+                                else
+                                {
+                                    <span class="ml-1 badge badge-danger">cancelled</span>
+                                }
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+
+<div class="modal fade" id="ModelOrderDetail" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Order Detail</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+
+                <div class="row p-2">
+                    <div class="col-md-4">
+                        <label for="BillNo" class="col-form-label">Bill No</label>
+
+                        <div class="form-group">
+                            <input type="text" id="txtBillNo" readonly="true" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-4  ">
+                        <label for="Name" class="col-form-label">Name</label>
+                        <div class="form-group">
+                            <input type="text" id="txtName" readonly="true" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-4  ">
+                        <label for="PhoneNo" class="col-form-label">Phone Number</label>
+                        <div class="form-group">
+                            <input type="text" id="txtPhone" readonly="true" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-md-12 inline ">
+
+
+                        <label for="Address" class="col-form-label">Address</label>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="txtAddress" readonly="true" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive p-2">
+
+                    <table class="text-center col-md-12 table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Sr. No</th>
+                                <th>Image</th>
+                                <th>Product Name</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+
+                                <th>Total Amount</th>
+                            </tr>
+
+                        </thead>
+                        <tbody id="OrederDetailTable">
+                        </tbody>
+                    </table>
+
+                    <label for="Total Amount" class="col-form-label p-2">Bill Amount</label>
+
+                    <div class="form-group p-2">
+
+                        <input type="text" class="form-control" id="txtBillAmount" readonly="true" />
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function ViewOrderDetail(item) {
+        $("#ModelOrderDetail").modal('show');
+        let strOrderDetail = "";
+
+        $("#txtBillNo").val(item.orderNo);
+        $("#txtName").val(item.name);
+        $("#txtAddress").val(item.address);
+        $("#txtPhone").val(item.phoneNo);
+        $("#txtBillAmount").val('$' + item.netAmount);
+
+
+        $.each(item.orderDetails, function (index, value) {
+            var strImg = "<img src=\"" + value.product.image + "\" height='80' width='80' alt='" + value.product.name + "' />";
+            strOrderDetail += "<tr>";
+            strOrderDetail += "<td>" + (index + 1) + "</td>";
+            strOrderDetail += "<td>" + strImg + "</td>";
+            strOrderDetail += "<td>" + value.product.name + "</td>";
+            strOrderDetail += "<td>$" + value.price + "</td>";
+            strOrderDetail += "<td>" + value.qty + "</td>";
+            strOrderDetail += "<td>$" + (value.price * value.qty) + "</td>";
+            strOrderDetail += "</tr>";
+        });
+        $("#OrederDetailTable").html(strOrderDetail);
+
+    }
+
+    function ChangeOrder(type, id) {
+        var payload = {};
+        payload.OrderId = id;
+        payload.OrderChangeType = type;
+        $.ajax({
+            type: "post",
+            url: "../Order/ChangeOrder",
+            data: payload,
+            dataType: "json",
+            async: false,
+            success: function (response) {
+                location.reload();
+            },
+            error: function (err) {
+                alert(err.responseText);
+            }
+        });
+    }
+</script>
